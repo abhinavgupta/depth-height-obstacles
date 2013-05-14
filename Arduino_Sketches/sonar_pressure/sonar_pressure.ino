@@ -1,4 +1,7 @@
 
+#include <SoftwareSerial.h>
+
+
 int a,b;
 int pressure,sonar;
 char response[20];
