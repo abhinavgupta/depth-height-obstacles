@@ -1,6 +1,8 @@
 Height-Extract
 ===============
 
-This project is to use stereo vision to ideintify the height and depth of obstacles. 
+The aim of this project is to identify obstacles and measure their depth and height.
 
-Further information for the same will be added as the project proceeds ahead
+It does so as a combination of sensor data and Computer Vision techniques.
+
+More info will come in later.
