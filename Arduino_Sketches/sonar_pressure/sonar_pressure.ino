@@ -1,5 +1,5 @@
 
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 
 
 int a,b;
@@ -48,7 +48,7 @@ void loop()
     digitalWrite(7,LOW);
     delay(50);
     sonar=analogRead(A0)/2;
-    
+    //Serial.println(sonar);
       while(!Serial.available());
       int dataCounter = 0;
     while((val = Serial.read()) != ':') {

@@ -15,15 +15,15 @@
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include <time.h>
-#include "chirag.h"
+#include "DepthHeightCalculation.h"
 
 using namespace cv;
 using namespace std;
 
 int main()
 {
-	VideoCapture cap_left(0);
-	VideoCapture cap_right(1);
+	VideoCapture cap_left(1);
+	VideoCapture cap_right(2);
 	
 	
 	cap_left.set(CV_CAP_PROP_FRAME_WIDTH, 320);
@@ -46,9 +46,10 @@ int main()
 	{
 		Mat left_frame, right_frame;
 		strcpy(dat, "00\0");
+		strcpy(b, "0\0");
 		
 		a = clock();
-		cap_left >> left_frame;
+		cap_right >> right_frame;
 		e = clock()-a;
 		printf("CAMERA CAPTURE = %f msec\n",(((double)e/CLOCKS_PER_SEC)*1000.00));
 		
