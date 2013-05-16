@@ -6,5 +6,4 @@ using namespace cv;
 
 int depth_height_calc(Mat leftImg, Mat rightImg);
 
-
 #endif

@@ -16,27 +16,22 @@
 #include "opencv2/highgui/highgui.hpp"
 #include <time.h>
 #include "DepthHeightCalculation.h"
+#include "Global.h"
 
 using namespace cv;
 using namespace std;
 
 int main()
 {
-	VideoCapture cap_left(1);
-	VideoCapture cap_right(2);
 	
-	
-	cap_left.set(CV_CAP_PROP_FRAME_WIDTH, 320);
-	cap_left.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
-	cap_right.set(CV_CAP_PROP_FRAME_WIDTH, 320);
-	cap_right.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+	initialize();
 	
 	int fd = 0;
 	int baudrate = B115200;
 	char dat[2],b[1];
 	int rc,n;
 	int output_from_matching=0;
-			
+				
 	fd = serialport_init("/dev/ttyUSB0", baudrate);
 	if(fd==-1) return -1;
 	
@@ -46,7 +41,6 @@ int main()
 	{
 		Mat left_frame, right_frame;
 		strcpy(dat, "00\0");
-		strcpy(b, "0\0");
 		
 		a = clock();
 		cap_right >> right_frame;
@@ -58,36 +52,30 @@ int main()
 		e = clock()-a;
 		printf("CAMERA CAPTURE = %f msec\n",(((double)e/CLOCKS_PER_SEC)*1000.00));
 		
-		c = clock();
-		int n = read(fd,b,1);
-		d = clock()-c;
-		printf("SERIAL READ =%f msec\n",(((double)d/CLOCKS_PER_SEC)*1000.00));
-		
-		if(b[0]=='i')
-		{
-			printf("DEPTH-HEIGHT CODE TRIGGERED\n");
+	
+		printf("DEPTH-HEIGHT CODE TRIGGERED\n");
 			
-			output_from_matching=0;
-			output_from_matching = depth_height_calc(left_frame,right_frame);
-			printf("VALUE FROM DEPTH-HEIGHT CODE IS %d\n",output_from_matching); 
+		output_from_matching=0;
+		output_from_matching = depth_height_calc(left_frame,right_frame);
+		printf("VALUE FROM DEPTH-HEIGHT CODE IS %d\n",output_from_matching); 
 			
-			if(output_from_matching==0)
-			{	
-				dat[0] = '2';
-				dat[1] = 58;
-			}
-		
-			else
-			{
-				dat[0] = '1';
-				dat[1] = 58;
-			}
-			
-			printf("%s\n",dat);
-			
-			rc = serialport_write(fd, dat);
-			if(rc==-1) return -1;
+		if(output_from_matching==0)
+		{	
+			dat[0] = '2';
+			dat[1] = 58;
 		}
+	
+		else
+		{
+			dat[0] = '1';
+			dat[1] = 58;
+		}
+			
+		printf("%s\n",dat);
+			
+		rc = serialport_write(fd, dat);
+		if(rc==-1) return -1;
+	
 		
 		char key = (char )waitKey(5);
 		if(key==27) return 0;

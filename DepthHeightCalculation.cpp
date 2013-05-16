@@ -12,8 +12,20 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include "Global.h"
+
 using namespace cv;
 using namespace std;
+
+
+vector<KeyPoint> keypoints_1, keypoints_2;
+FastFeatureDetector detector(10);
+
+Mat descriptors_1, descriptors_2;
+BriefDescriptorExtractor ex;
+
+float distance_mm;
+int obcount;
 
 int getHeight(Mat H,int ch, Point i, Point f);	//Function to get height of set of points 
 
@@ -23,65 +35,8 @@ bool myobject (DMatch i,DMatch j)	//Object for using std:sort on the cv::DMatch 
 }
 
 
-int ch = 5;		//Hardcoding Camera Height as 5 cms
-
-
-/* Matrices A and B are required to calculate homography matrices of planes parallel to ground at some height h.*/
-
-Mat A = Mat(3,1, CV_64F);	
-Mat B = Mat(3,1, CV_64F);
-        
-
-double height;		//getHeight returns values of individual points to height in main function.
-
-
-
-
 int depth_height_calc(Mat leftImg, Mat rightImg) 
 {
-	Mat img_matches,img_1,img_2;	//img_1 ---> left image   img_2 ---> right image
-	
-	int i=0;
-
-/*Following are theCamera properties used to get depths of image points. Baseline mm is the distance between cameras in mm. focal_length_mm is the focal length in mm. disparity_pixel is the difference between x coordinates of 2 points matched in img_1 and img_2. */
-
-	double baseline_mm = 120, focal_length_mm = 2.5;
-	double disparity_pixel,sensor_pixel_per_mm=278.26,focal_length_pixel=640;	
-	float distance_mm;	//distance_mm is used to store the depth of a point.
-	char text[5];
-	
-
-
-/*homography matrix was calculated by using a chess board on the ground and points were matched to get this homography matrix values. They will not change if the relative position of the cameras is not changed, which is OK in our case. Mat h isGround plane homography matrix required to find heights. It has been intialized manually because ground plane homography remains constant. It helps in not using cvfindhomography every time.*/
-	
-	Mat h(3,3,CV_64F);	
-	h.at<double>(0,0) = 1.0365;
-	h.at<double>(0,1) = -0.946;
-	h.at<double>(0,2) = 116.715;
-	h.at<double>(1,0) = -0.1621;    
-	h.at<double>(1,1) = 1.2213;    
-	h.at<double>(1,2) = -2.1424;    
-	h.at<double>(2,0) = -0.000973;    
-	h.at<double>(2,1) = 0.0012;    
-	h.at<double>(2,2) = 1;  
-
-
-	int obcount;	//stores number of points to be considered as obstacles based on certain criteria. This criteria need to be changed by testing.
-	clock_t s11,e11;
-	s11=clock();
-
-/* Now open rmaps file to rectify images. This file is made using stereocalibration and it contains the extrinsic parameters of the cameras. The file is opened and parameters are stored in a 2 dimensional matrix - rmap[2][2] */
-
-	Mat rmap[2][2];
-    FileStorage fs("rmaps.yml",CV_STORAGE_READ);
-    fs["rmap00"]>>rmap[0][0];       
-    fs["rmap01"]>>rmap[0][1];
-    fs["rmap10"]>>rmap[1][0];
-    fs["rmap11"]>>rmap[1][1];
-    fs.release();
-
-	e11=clock()-s11;
-    printf("Image capture time taken=%f msec\n",(((double)e11/CLOCKS_PER_SEC)*1000.00));
 
 	vector< DMatch > m1;	//m1 is a vector of type DMatch which contains matches	
 	
@@ -93,26 +48,19 @@ int depth_height_calc(Mat leftImg, Mat rightImg)
 	
 /**************RECTIFY IMAGES***************/
 
-/* remap is used to rectify captured images using the extrinsic parameters of the camera. The left rectified image is stored in img_1 and right rectified image is stored in img_2. */
+/* remap is used to rectify captured images using the extrinsic parameters of the camera. The left rectified image is stored in img_left_remap and right rectified image is stored in img_right_remap. */
 
-	remap(leftImg, img_1, rmap[0][0], rmap[0][1], CV_INTER_LINEAR);
-	remap(rightImg, img_2, rmap[1][0], rmap[1][1], CV_INTER_LINEAR);
+	remap(leftImg, img_left_remap, rmap[0][0], rmap[0][1], CV_INTER_LINEAR);
+	remap(rightImg, img_right_remap, rmap[1][0], rmap[1][1], CV_INTER_LINEAR);
 
 	end2=clock()-(start);	//time taken to rectify images is stored in end2.
 	printf("Rectification Time Taken=%f msec\n",(((double)end2/CLOCKS_PER_SEC)*1000.00));
 
 
-/*****************FEATURE AND DESCRIPTOR INITIALIZATIONS***************/
-
-	Mat descriptors_1, descriptors_2;	//Descriptors are stored in these variables
-	vector<KeyPoint> keypoints_1, keypoints_2;	//Features found by FF are stored in keypoints
-
 /**************FAST FEATURE DETECTION***************/	
 	
-	
-	FastFeatureDetector detector(10);	//Fast feature detection, 10 = minimum Hessian threshold
-	detector.detect(img_1, keypoints_1);	//keypoints are stored in keypoints_1 and keypoints_2.
-	detector.detect(img_2, keypoints_2);
+	detector.detect(img_left_remap, keypoints_1);	//keypoints are stored in keypoints_1 and keypoints_2.
+	detector.detect(img_right_remap, keypoints_2);
 	
 	end3=clock()-(end2+start);	//time taken for Fast feature extraction
 	printf("Detector Time Taken=%f msec\n",(((double)end3/CLOCKS_PER_SEC)*1000.00));
@@ -120,10 +68,8 @@ int depth_height_calc(Mat leftImg, Mat rightImg)
 
 /**************DESCRIPTOR EXTRACTION FROM FEATURE POINTS***************/
 	
-
-	BriefDescriptorExtractor ex(32);
-	ex.compute(img_1, keypoints_1, descriptors_1);
-	ex.compute(img_2, keypoints_2, descriptors_2);
+	ex.compute(img_left_remap, keypoints_1, descriptors_1);
+	ex.compute(img_right_remap, keypoints_2, descriptors_2);
 	
 	end4=clock()-(end3+end2+start);	//time taken for descriptor extraction
 	printf("Extraction Time Taken=%f msec\n",(((double)end4/CLOCKS_PER_SEC)*1000.00));
@@ -178,11 +124,11 @@ int depth_height_calc(Mat leftImg, Mat rightImg)
 
 /************DEPTH CALCULATION********************/
 	double depth[good_matches.size()];	//depth is a array of size equal to number of matches in good_matches. It contains depths of all these matches.
-	Mat depthimg=img_1.clone();	//image containing depths of matches in good_matches
+	Mat depthimg=img_left_remap.clone();	//image containing depths of matches in good_matches
 	s1=clock();	
 	for(i=0;i<good_matches.size();i++)
 	{
-		disparity_pixel =  abs(keypoints_1[good_matches[i].queryIdx ].pt.x-keypoints_2[ good_matches[i].trainIdx ].pt.x);	//disparity_pixel contains the difference between x coordinates of good_matches points in both images img_1 and img_2.
+		disparity_pixel =  abs(keypoints_1[good_matches[i].queryIdx ].pt.x-keypoints_2[ good_matches[i].trainIdx ].pt.x);	//disparity_pixel contains the difference between x coordinates of good_matches points in both images img_left_remap and img_right_remap.
 		distance_mm = baseline_mm * focal_length_pixel*0.44*1.46/(2*1000*disparity_pixel);	//The formula is applied to get depths. The extra numerals in the formula appear because the formula was tempered with to scale up or down the results to get exact depths.
 		depth[i]=distance_mm;	//distance of ith match is stored in depth[i]
 			
@@ -199,7 +145,7 @@ int depth_height_calc(Mat leftImg, Mat rightImg)
 
 /**************HEIGHT CALCULATION******************/
 
-	Mat hedisp=img_1.clone();	//calculated heights are shown in hedisp at the end of this segment	
+	Mat hedisp=img_left_remap.clone();	//calculated heights are shown in hedisp at the end of this segment	
 	double he[good_matches.size()];	//he is a array of size of good_matches and contains the heights of all the matches
 	int ch=5;	//camera height
 	s2=clock();
@@ -258,13 +204,13 @@ return 0;
 
 /***********getHeight function*****************/
 
-//getHeight function is used to get heights of different points in the image. The parameters passed are 1. The homography matrix of ground plane. 2. The camera height. 3. Point in img_1 for good_matches[i]. 4. Point in img_2 for good_matches[i]
+//getHeight function is used to get heights of different points in the image. The parameters passed are 1. The homography matrix of ground plane. 2. The camera height. 3. Point in img_left_remap for good_matches[i]. 4. Point in img_right_remap for good_matches[i]
 
-//Algorithm: We have the ground plane homography which converts all points on ground in img_1 to the respective points in img_2. But as it is for ground plane, if this matrix is applied to any point not on this plane, we wont get the point in img_2 as a result. 
+//Algorithm: We have the ground plane homography which converts all points on ground in img_left_remap to the respective points in img_right_remap. But as it is for ground plane, if this matrix is applied to any point not on this plane, we wont get the point in img_right_remap as a result. 
 
-//For every point passed as an argument, homography matrix of all planes parallel to the ground is computed at an interval of 1cm. The point passed as an argument is multipled with all the matrices on by one and the resultant is stored in (ex,ey). This is the expected matching point in img_2 of the point in img_1.
+//For every point passed as an argument, homography matrix of all planes parallel to the ground is computed at an interval of 1cm. The point passed as an argument is multipled with all the matrices on by one and the resultant is stored in (ex,ey). This is the expected matching point in img_right_remap of the point in img_left_remap.
 
-//After getting all these (ex,ey), the one closest to the actual point in img_2 is selected. The particular h for which we got the (ex,ey) is the height in cm for that point.
+//After getting all these (ex,ey), the one closest to the actual point in img_right_remap is selected. The particular h for which we got the (ex,ey) is the height in cm for that point.
 
 //The formula to calculated homography matrix of a plane at a distance d from the camera, given the homography matrices of 2 planes at distances d1 and d2 from the camera being h1 and h2. The formula can be checked out at this link.http://www.google.co.in/url?sa=t&rct=j&q=&esrc=s&source=web&cd=9&ved=0CIIBEBYwCA&url=http%3A%2F%2Fsyedurrahman.tripod.com%2Fobstacle_detection.pdf&ei=zIN-UfDFK4PkrAeSz4H4CA&usg=AFQjCNHJ_DutJgjsSjcEp6uCz3PCK0TA8A&sig2=qkTwGn35BPwQdCeIPYFRhQ&bvm=bv.45645796,d.bmk&cad=rja
 
@@ -275,7 +221,7 @@ int getHeight(Mat H, int ch, Point i, Point f)
 	int mindiff = 1000;
 	int maxh=100;	//maxh is the maximum height till which detection is done in centimeters
 	int test;    
-	double ex, ey, p, q, r, t, d, s;	//(ex,ey) is the expected point in img_2
+	double ex, ey, p, q, r, t, d, s;	//(ex,ey) is the expected point in img_right_remap
     while(h < maxh)	// The matrices will be computed for all planes from 0cm to 100cm. Obstacles higher than that have been avoided here.
     {
         H.copyTo(newH);		//newH=H
@@ -295,7 +241,7 @@ int getHeight(Mat H, int ch, Point i, Point f)
 	newH = H.mul(float(ch)/float(ch-h));
     //    Mat H_inf = Mat::eye(3,3, CV_64F)*(float(h)/float(h-ch));
 //	newH = H.mul(float(ch)/float(h-ch));
-        Mat A = Mat(3,1, CV_64F);	//A is a 3x1 matrix which contains [x y 1] where x and y are the X and Y coordinates of img_1 point
+        Mat A = Mat(3,1, CV_64F);	//A is a 3x1 matrix which contains [x y 1] where x and y are the X and Y coordinates of img_left_remap point
         Mat B = Mat(3,1, CV_64F);	// B will be calculated by multiplying A with newH
         A.at<double>(0,0) = i.x;
         A.at<double>(1,0) = i.y;
