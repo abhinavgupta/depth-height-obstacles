@@ -23,8 +23,6 @@ extern vector<KeyPoint> keypoints_1, keypoints_2;
 extern FastFeatureDetector detector;
 extern BriefDescriptorExtractor ex;
 
-extern VideoCapture cap_left, cap_right;
-
 extern Mat img_matches, leftImg, rightImg, img_left_remap, img_right_remap;
 
 extern int i;

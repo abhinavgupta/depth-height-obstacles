@@ -26,6 +26,13 @@ int main()
 	
 	initialize();
 	
+	VideoCapture cap_left(0), cap_right(1);
+	
+	cap_left.set(CV_CAP_PROP_FRAME_WIDTH, 320); 
+	cap_left.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+	cap_right.set(CV_CAP_PROP_FRAME_WIDTH, 320);
+	cap_right.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+	
 	int fd = 0;
 	int baudrate = B115200;
 	char dat[2],b[1];

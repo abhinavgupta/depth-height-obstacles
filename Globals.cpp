@@ -19,7 +19,6 @@ double height;
 
 char text[5];
 
-VideoCapture cap_left(0), cap_right(1);
 Mat img_matches, leftImg, rightImg, img_left_remap, img_right_remap;
 
 int i=0;
@@ -52,11 +51,6 @@ int initialize()
 	fs["rmap10"]>>rmap[1][0];
 	fs["rmap11"]>>rmap[1][1];
 	fs.release();
-	
-	cap_left.set(CV_CAP_PROP_FRAME_WIDTH, 320); 
-	cap_left.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
-	cap_right.set(CV_CAP_PROP_FRAME_WIDTH, 320);
-	cap_right.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
 
 	return 0;
 }
