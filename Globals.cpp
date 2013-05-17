@@ -8,6 +8,8 @@
 #include "opencv2/highgui/highgui.hpp"
 #include <vector>
 
+/* Refer to Global.h for in detailed explanation of the variables initialized here */
+
 using namespace cv;
 
 int ch = 5;

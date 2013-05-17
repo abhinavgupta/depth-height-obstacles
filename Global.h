@@ -7,32 +7,34 @@
 #include "opencv2/highgui/highgui.hpp"
 #include <vector>
 
+/* This header contains externs of all the Global variables that have to be access across all the files*/
+
 using namespace cv;
 
-extern int ch;
+extern int ch;																							//Camera Height variable
 
-extern Mat A;
-extern Mat B;
+extern Mat A;																							//Homography Matrix at height h
+extern Mat B;																							//Homography Matrix at height h
 
-extern double height;
-extern char text[5];
+extern double height;																					//Height variable for getHeight()
+extern char text[5];																					// For display purposes
 
-extern Mat descriptors_1, descriptors_2;
-extern vector<KeyPoint> keypoints_1, keypoints_2;
+extern Mat descriptors_1, descriptors_2;																//Descriptor Matrices
+extern vector<KeyPoint> keypoints_1, keypoints_2;														//Keypoint vectors
 
-extern FastFeatureDetector detector;
-extern BriefDescriptorExtractor ex;
+extern FastFeatureDetector detector;																	//detector function
+extern BriefDescriptorExtractor ex;																		//Descriptor function
 
-extern Mat img_matches, leftImg, rightImg, img_left_remap, img_right_remap;
+extern Mat img_matches, leftImg, rightImg, img_left_remap, img_right_remap;								//remap, capture and match matrices
 
-extern int i;
-extern double baseline_mm, focal_length_mm, disparity_pixel, sensor_pixel_per_mm, focal_length_pixel;
+extern int i;																						
+extern double baseline_mm, focal_length_mm, disparity_pixel, sensor_pixel_per_mm, focal_length_pixel;	//Camera parameters
 
-extern float distance_mm;
-extern int obcount;
+extern float distance_mm;																				//Depth variable
+extern int obcount;																						//Obstacles count 
 
-extern Mat h;
-extern Mat rmap[2][2];
-extern FileStorage fs;
+extern Mat h;																							//Ground homography matrix
+extern Mat rmap[2][2];																					//Calibration matrix
+extern FileStorage fs;																					//File handler variable
 
-int initialize();
+int initialize();																						//Function to initialize variables

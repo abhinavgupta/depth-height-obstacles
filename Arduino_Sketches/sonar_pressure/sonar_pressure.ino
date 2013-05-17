@@ -1,12 +1,10 @@
 
-//#include <SoftwareSerial.h>
-
-
 int a,b;
 int pressure,sonar;
 char response[20];
 int count=1;
 int val=0;
+int flag=0;
 void setup()
 {
   Serial.begin(115200);
@@ -20,11 +18,14 @@ void setup()
 
 void loop()
 {
+  while(!Serial.available() > 0)
+  {
   a=0;
   b=0;
   for(int i=0;i<5;i++)
   {
     pressure=analogRead(A1);
+    //Serial.println(pressure);
     if(pressure < 800)
     {
       a++;
@@ -39,40 +40,39 @@ void loop()
   }
   if(a==5 && count==0)
   {
-    
     count=1;
-    a=0;
-    Serial.println('i');
     digitalWrite(7,HIGH);
     delayMicroseconds(20);
     digitalWrite(7,LOW);
     delay(50);
     sonar=analogRead(A0)/2;
     //Serial.println(sonar);
-      while(!Serial.available());
-      int dataCounter = 0;
+    flag=1;
+  }
+  
+  }
+  
+  int dataCounter = 0;
     while((val = Serial.read()) != ':') {
       if(val!= -1) {
         response[dataCounter] = val;
         ++dataCounter;
-  
     }
- 
-  }
+    }
     
-   
-    
-    if(sonar<100 && response[0]=='1')
+  if(flag==1)
+{
+   if(sonar<100 && response[0]=='1')
     {
       digitalWrite(6,HIGH);
-     
+      //Serial.println("cs");
       delay(2000);
       digitalWrite(6,LOW);
     }
     else
     if(sonar>100 && response[0]=='1')
     {
-    
+      //Serial.println('s');
       for(int j=0;j<5;j++)
       {
         digitalWrite(6,HIGH);
@@ -84,7 +84,7 @@ void loop()
     else
     if(sonar<100 && response[0]!='1')
     {
-    
+      //Serial.println('c');
       digitalWrite(6,HIGH);
       delay(1000);
       digitalWrite(6,LOW);
@@ -93,5 +93,8 @@ void loop()
     {
     digitalWrite(6,LOW);
     }
-  }
+  
+flag=0;
 }
+    }
+  
