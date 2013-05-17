@@ -16,6 +16,7 @@ Codes for Serial communication, depth-height extraction and global variables are
 
 Following are the files and their description:
 
+0. Makefile							- 		Make file for the folder
 1. SerialUtilities.cpp 				-		Contains functions for serial communications
 2. SerialUtilities.h				-		Header file for above
 3. DepthHeightCalculations.cpp		-		Contains the main code for depth-height calculations
@@ -26,8 +27,15 @@ Following are the files and their description:
 8. Arduino_Sketches/				- 		Folder containg the corresponding Arduino skecthes
 9. rmaps.ymp						-		Data collected from the calibration code
 
-ISSUES: UPDATE MAKE FILE
-		ADD CALIBRATION CODES
+USAGE: Enter the folder and run make
+
+$ make
+
+The excuetable will be named test. Just run the file.
+
+$ ./test
+
+ISSUES: ADD CALIBRATION CODES
 		
 Contributors:
 
