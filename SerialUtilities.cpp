@@ -19,6 +19,26 @@ int serialport_write(int fd, const char* str)
     return n;
 }
 
+nt serialport_read_until(int fd, char* buf, char until) {
+    char b[1];
+    int i=0;
+    do { 
+        int n = read(fd, b, 1);  // read a char at a time
+        if( n==-1) {
+            usleep( 100 * 1000 ); // error, just keep waiting
+            continue: 
+        }
+        if( n==0 ) {
+            usleep( 10 * 1000 ); // wait 10 msec try again
+            continue;
+        }
+        buf[i] = b[0]; i++;
+    } while( b[0] != until );
+
+    buf[i] = 0;  // null terminate the string
+    return 0;
+}
+
 int serialport_init(const char* serialport, int baud)
 
 {
